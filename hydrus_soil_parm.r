@@ -45,5 +45,20 @@ ids$depthI <- ifelse(ids$Depth=="0-10",1,
 soilTx <- join(soilT,ids,by=c("Depth","ShrubID"),type="left")
 soilMx <- join(datM, ids,by=c("Depth","ShrubID"),type="left")				
 
+#commbine texture data into soil Mx to get bulk density calculations
+soilAllx <- join(soilMx,soilTx, by=c("Depth","ShrubID","shrubD","shrubI","depthI"),
+				type="left")
+#bd from saxton and rawls				
+soilAllx$bd <- (1-soilAllx$qs)*2.65
+
+#calculate vwc
+soilAllx$vwc <- soilAllx$bd*soilAllx$rwc
+
 #start by reading in psi as data based on texture and see how model runs
-datalist <- list(Nobs=,psi,psi.r,psi.s,h.mpa,shrubD)
+datalist <- list(Nobs=dim(SoilMx)[1],
+				psi=soilAllx$vwc,
+				psi.r=soilTx$qr,
+				psi.s=soilTx$qs,
+				h.mpa=abs(soilAllx$wp),
+				shrubD=soilAllx$shrubD,
+				NshrubD=dim(ids)[1])
