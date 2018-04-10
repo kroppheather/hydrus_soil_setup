@@ -3,7 +3,7 @@ library(R2OpenBUGS)
 library(coda)
 
 #set model directory
-modD <- "c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run1"
+modD <- "c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run2"
 
 #read in soil texture data
 datT <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\texture.csv")
