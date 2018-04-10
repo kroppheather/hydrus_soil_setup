@@ -1,4 +1,10 @@
 library(plyr)
+library(R2OpenBUGS)
+library(coda)
+
+#set model directory
+modD <- "c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run1"
+
 #read in soil texture data
 datT <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\texture.csv")
 
@@ -55,10 +61,26 @@ soilAllx$bd <- (1-soilAllx$qs)*2.65
 soilAllx$vwc <- soilAllx$bd*soilAllx$rwc
 
 #start by reading in psi as data based on texture and see how model runs
-datalist <- list(Nobs=dim(SoilMx)[1],
+datalist <- list(Nobs=dim(soilAllx)[1],
 				psi=soilAllx$vwc,
 				psi.r=soilTx$qr,
 				psi.s=soilTx$qs,
 				h.mpa=abs(soilAllx$wp),
 				shrubD=soilAllx$shrubD,
 				NshrubD=dim(ids)[1])
+				
+				
+#starting values
+startV <- list(list(n=rnorm(dim(ids)[1],1.8,.1),alpha.cm=runif(dim(ids)[1],.15,.2)),
+				list(n=rnorm(dim(ids)[1],2.2,.1),alpha.cm=runif(dim(ids)[1],.1,.15)),
+				list(n=rnorm(dim(ids)[1],2.6,.1),alpha.cm=runif(dim(ids)[1],.01,.1)))
+
+params <- c("alpha.mpa","alpha.cm","n","sig.psi")				
+				
+bugs(data=datalist, inits=startV,parameters.to.save=params,
+             n.iter=5000, n.chains=3, n.burnin=2000, n.thin=10,
+             model.file="c:\\Users\\hkropp\\Documents\\GitHub\\hydrus_soil_setup\\van_genut.txt",
+			 codaPkg=TRUE,
+             OpenBUGS.pgm="C:/Program Files (x86)/OpenBUGS/OpenBUGS323/OpenBUGS.exe",
+			 debug=TRUE,
+             working.directory=paste0(modD))				
