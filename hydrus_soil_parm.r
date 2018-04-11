@@ -60,20 +60,32 @@ soilAllx$bd <- (1-soilAllx$qs)*2.65
 #calculate vwc
 soilAllx$vwc <- soilAllx$bd*soilAllx$rwc
 
+
+#look at soil across depth
+
+soilT$depthI <- ifelse(soilT$Depth=="0-10",1,
+				ifelse(soilT$Depth=="10-20",2,
+				ifelse(soilT$Depth=="20-30",3,4)))
+				
+depthR <- aggregate(soilT$qr,by=list(soilT$depthI),FUN="mean")
+colnames(depthR) <- c("depthI","qr")
+depthS <- aggregate(soilT$qs,by=list(soilT$depthI),FUN="mean")
+colnames(depthS) <- c("depthI","qs")			
+
 #start by reading in psi as data based on texture and see how model runs
 datalist <- list(Nobs=dim(soilAllx)[1],
 				psi=soilAllx$vwc,
-				psi.r=soilTx$qr,
-				psi.s=soilTx$qs,
+				psi.r=depthR$qr,
+				psi.s=depthS$qs,
 				h.mpa=abs(soilAllx$wp),
-				shrubD=soilAllx$shrubD,
-				NshrubD=dim(ids)[1])
+				shrubD=soilAllx$depthI,
+				NshrubD=dim(depthR)[1])
 				
 				
 #starting values
-startV <- list(list(n=rnorm(dim(ids)[1],1.8,.1),alpha.cm=runif(dim(ids)[1],.15,.2)),
-				list(n=rnorm(dim(ids)[1],2.2,.1),alpha.cm=runif(dim(ids)[1],.1,.15)),
-				list(n=rnorm(dim(ids)[1],2.6,.1),alpha.cm=runif(dim(ids)[1],.01,.1)))
+startV <- list(list(n=rnorm(dim(depthR)[1],1.8,.1),alpha.cm=runif(dim(depthR)[1],.15,.2)),
+				list(n=rnorm(dim(depthR)[1],2.2,.1),alpha.cm=runif(dim(depthR)[1],.1,.15)),
+				list(n=rnorm(dim(depthR)[1],2.6,.1),alpha.cm=runif(dim(depthR)[1],.01,.1)))
 
 params <- c("alpha.mpa","alpha.cm","n","sig.psi")				
 				
