@@ -121,7 +121,7 @@ startV <- list(list(n=rnorm(1,1.8,.1),alpha.cm=runif(1,.15,.20)),
 params <- c("alpha.cm","n","sig.psi")				
 				
 bugs(data=datalist, inits=startV,parameters.to.save=params,
-             n.iter=5000, n.chains=3, n.burnin=2000, n.thin=1,
+             n.iter=5000, n.chains=3, n.burnin=2000, n.thin=10,
              model.file="c:\\Users\\hkropp\\Documents\\GitHub\\hydrus_soil_setup\\van_genut.txt",
 			 codaPkg=TRUE,
              OpenBUGS.pgm="C:/Program Files (x86)/OpenBUGS/OpenBUGS323/OpenBUGS.exe",
