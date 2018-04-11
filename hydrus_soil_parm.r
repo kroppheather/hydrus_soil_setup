@@ -3,7 +3,7 @@ library(R2OpenBUGS)
 library(coda)
 
 #set model directory
-modD <- "c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run2"
+modD <- "c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run3"
 
 #read in soil texture data
 datT <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\texture.csv")
@@ -72,20 +72,38 @@ colnames(depthR) <- c("depthI","qr")
 depthS <- aggregate(soilT$qs,by=list(soilT$depthI),FUN="mean")
 colnames(depthS) <- c("depthI","qs")			
 
+
+plot(soilAllx$vwc[soilAllx$depthI==1],abs(soilAllx$wp[soilAllx$depthI==1]), pch=19,
+		col="cornflowerblue")
+points(soilAllx$vwc[soilAllx$depthI==2],abs(soilAllx$wp[soilAllx$depthI==2]), pch=19,
+		col="darkgreen")		
+points(soilAllx$vwc[soilAllx$depthI==3],abs(soilAllx$wp[soilAllx$depthI==3]), pch=19,
+		col="tomato3")	
+points(soilAllx$vwc[soilAllx$depthI==4],abs(soilAllx$wp[soilAllx$depthI==4]), pch=19,
+		col="darkorchid3")
+
+theta <- function(psi.r,psi.s,alpha.mpa,h.mpa,n){
+
+
+psi.r + ((psi.s-psi.r)/((1+((alpha.mpa*h.mpa)^n))^(1-(1/n))))
+}	
+
+points(theta(0.02,mean(soilT$qs),
+		20,seq(0,150),2.2),	seq(0,150),type="l")
+		
+20*0.10197		
 #start by reading in psi as data based on texture and see how model runs
 datalist <- list(Nobs=dim(soilAllx)[1],
-				psi=soilAllx$vwc,
-				psi.r=depthR$qr,
-				psi.s=depthS$qs,
-				h.mpa=abs(soilAllx$wp),
-				shrubD=soilAllx$depthI,
-				NshrubD=dim(depthR)[1])
+				psi=abs(soilAllx$vwc),
+				psi.r=0.01,
+				psi.s=mean(soilT$qs),
+				h.mpa=abs(soilAllx$wp))
 				
 				
 #starting values
-startV <- list(list(n=rnorm(dim(depthR)[1],1.8,.1),alpha.cm=runif(dim(depthR)[1],.15,.2)),
-				list(n=rnorm(dim(depthR)[1],2.2,.1),alpha.cm=runif(dim(depthR)[1],.1,.15)),
-				list(n=rnorm(dim(depthR)[1],2.6,.1),alpha.cm=runif(dim(depthR)[1],.01,.1)))
+startV <- list(list(n=rnorm(1,1.8,.1),alpha.mpa=runif(1,15,20)),
+				list(n=rnorm(1,2.2,.1),alpha.mpa=runif(1,10,15)),
+				list(n=rnorm(1,2.6,.1),alpha.mpa=runif(1,20,25)))
 
 params <- c("alpha.mpa","alpha.cm","n","sig.psi")				
 				
