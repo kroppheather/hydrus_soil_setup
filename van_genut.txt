@@ -1,12 +1,9 @@
 model{
 	for(i in 1:Nobs){
 		psi[i] ~ dnorm(mu.psi[i],tau.psi)
-		mu.psi[i] <- psi.r + ((psi.s-psi.r)/pow(1+(pow(alpha.mpa*h.mpa[i],n)),(1-(1/n))))
+		mu.psi[i] <- psi.r + ((psi.s-psi.r)/pow(1+(pow(alpha.cm*h.cm[i],n)),(1-(1/n))))
 	}
-
-		alpha.mpa ~ dunif(0,50)
-		#convert to cm
-		alpha.cm <- alpha.mpa * 0.10197
+		alpha.cm ~dunif(0,.5)
 		n~dunif(0.5,3)
 
 	tau.psi <- pow(sig.psi,-2)

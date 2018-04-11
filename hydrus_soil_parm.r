@@ -72,7 +72,7 @@ colnames(depthR) <- c("depthI","qr")
 depthS <- aggregate(soilT$qs,by=list(soilT$depthI),FUN="mean")
 colnames(depthS) <- c("depthI","qs")			
 
-
+#plot data to check function fit
 plot(soilAllx$vwc[soilAllx$depthI==1],abs(soilAllx$wp[soilAllx$depthI==1]), pch=19,
 		col="cornflowerblue")
 points(soilAllx$vwc[soilAllx$depthI==2],abs(soilAllx$wp[soilAllx$depthI==2]), pch=19,
@@ -88,27 +88,40 @@ theta <- function(psi.r,psi.s,alpha.mpa,h.mpa,n){
 psi.r + ((psi.s-psi.r)/((1+((alpha.mpa*h.mpa)^n))^(1-(1/n))))
 }	
 
+
+# 1MPa =1019.7 cm of water
+
+
+#convert MPa to cm of water
+
+plot(soilAllx$vwc[soilAllx$depthI==1],abs(soilAllx$wp[soilAllx$depthI==1])*1019.7, pch=19,
+		col="cornflowerblue")
+points(soilAllx$vwc[soilAllx$depthI==2],abs(soilAllx$wp[soilAllx$depthI==2])*1019.7, pch=19,
+		col="darkgreen")		
+points(soilAllx$vwc[soilAllx$depthI==3],abs(soilAllx$wp[soilAllx$depthI==3])*1019.7, pch=19,
+		col="tomato3")	
+points(soilAllx$vwc[soilAllx$depthI==4],abs(soilAllx$wp[soilAllx$depthI==4])*1019.7, pch=19,
+		col="darkorchid3")
+
 points(theta(0.02,mean(soilT$qs),
-		20,seq(0,150),2.2),	seq(0,150),type="l")
-		
-20*0.10197		
+		.12,seq(0,150000),2.2),	seq(0,150000),type="l")
 #start by reading in psi as data based on texture and see how model runs
 datalist <- list(Nobs=dim(soilAllx)[1],
 				psi=abs(soilAllx$vwc),
 				psi.r=0.01,
 				psi.s=mean(soilT$qs),
-				h.mpa=abs(soilAllx$wp))
+				h.cm=abs(soilAllx$wp)*1019.7)
 				
 				
 #starting values
-startV <- list(list(n=rnorm(1,1.8,.1),alpha.mpa=runif(1,15,20)),
-				list(n=rnorm(1,2.2,.1),alpha.mpa=runif(1,10,15)),
-				list(n=rnorm(1,2.6,.1),alpha.mpa=runif(1,20,25)))
+startV <- list(list(n=rnorm(1,1.8,.1),alpha.cm=runif(1,.15,.20)),
+				list(n=rnorm(1,2.2,.1),alpha.cm=runif(1,.10,.15)),
+				list(n=rnorm(1,2.6,.1),alpha.cm=runif(1,.20,.25)))
 
-params <- c("alpha.mpa","alpha.cm","n","sig.psi")				
+params <- c("alpha.cm","n","sig.psi")				
 				
 bugs(data=datalist, inits=startV,parameters.to.save=params,
-             n.iter=5000, n.chains=3, n.burnin=2000, n.thin=10,
+             n.iter=5000, n.chains=3, n.burnin=2000, n.thin=1,
              model.file="c:\\Users\\hkropp\\Documents\\GitHub\\hydrus_soil_setup\\van_genut.txt",
 			 codaPkg=TRUE,
              OpenBUGS.pgm="C:/Program Files (x86)/OpenBUGS/OpenBUGS323/OpenBUGS.exe",
