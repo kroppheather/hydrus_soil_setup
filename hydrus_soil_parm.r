@@ -3,7 +3,7 @@ library(R2OpenBUGS)
 library(coda)
 
 #set model directory
-modD <- "c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run5"
+modD <- "c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run6"
 
 #read in soil texture data
 datT <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\texture.csv")
@@ -94,7 +94,7 @@ points(soilAllx$vwc[soilAllx$depthI==4],abs(soilAllx$wp[soilAllx$depthI==4])*101
 		col="darkorchid3")
 
 points(theta(0.01,mean(soilT$qs),
-		.24,seq(0,150000),1.3),	seq(0,150000),type="l")
+		50,seq(0,150000),1.3),	seq(0,150000),type="l")
 #start by reading in psi as data based on texture and see how model runs
 datalist <- list(Nobs=dim(soilAllx)[1],
 				psi=soilAllx$vwc,
@@ -137,13 +137,16 @@ parm97.5 <- apply (chains, 2, quantile,probs=0.975)
 OUT <- data.frame(parms =colnames(chains), Mean=parmMean,pc2.5=parm2.5,
 				pc97.5=parm97.5)
 				
-#evaluate model fit
-				
-	plot(soilAllx$vwc[soilAllx$depthI==1],abs(soilAllx$wp[soilAllx$depthI==1])*1019.7, pch=19,
-		col="cornflowerblue")
-points(soilAllx$vwc[soilAllx$depthI==2],abs(soilAllx$wp[soilAllx$depthI==2])*1019.7, pch=19,
-		col="darkgreen")		
-points(soilAllx$vwc[soilAllx$depthI==3],abs(soilAllx$wp[soilAllx$depthI==3])*1019.7, pch=19,
-		col="tomato3")	
-points(soilAllx$vwc[soilAllx$depthI==4],abs(soilAllx$wp[soilAllx$depthI==4])*1019.7, pch=19,
-		col="darkorchid3")			
+#evaluate model fit and parameters
+for(i in 1:dim(ids)[1]){
+	jpeg(paste0(modD,"\\plots\\soil\\",ids$ShrubID[i],"_",ids$depthI[i],".jpg"),
+			quality=100,width=1000,height=1000)
+		plot(abs(soilAllx$wp[soilAllx$shrubD==ids$shrubD[i]])*1019.7,
+				soilAllx$vwc[soilAllx$shrubD==ids$shrubD[i]], pch=19,
+				col="cornflowerblue",cex=2)
+		points(seq(0,150000),theta(0.01,mean(soilT$qs),
+		.14,seq(0,150000),1.3),	type="l", lwd=3, col="tomato3")	
+		
+	dev.off()		
+}
+		

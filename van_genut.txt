@@ -5,7 +5,7 @@ model{
 	rep.psi[i]~ dnorm(mu.psi[i],tau.psi)
 	}
 	for(j in 1:NshrubD){
-		alpha.cm[j] ~dunif(0,1)
+		alpha.cm[j] ~dunif(0,50)
 		n[j]~dunif(0.5,3)
 	}
 	tau.psi <- pow(sig.psi,-2)
