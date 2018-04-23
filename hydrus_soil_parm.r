@@ -3,7 +3,7 @@ library(R2OpenBUGS)
 library(coda)
 
 #set model directory
-modD <- "c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run7"
+modD <- "c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run8"
 
 #read in soil texture data
 datT <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\texture.csv")
@@ -70,7 +70,15 @@ soilT$depthI <- ifelse(soilT$Depth=="0-10",1,
 depthR <- aggregate(soilT$qr,by=list(soilT$depthI),FUN="mean")
 colnames(depthR) <- c("depthI","qr")
 depthS <- aggregate(soilT$qs,by=list(soilT$depthI),FUN="mean")
-colnames(depthS) <- c("depthI","qs")			
+colnames(depthS) <- c("depthI","qs")
+
+depthT <- aggregate(soilT$sand.,by=list(soilT$depthI),FUN="mean")
+colnames(depthT) <- c("depthI","sand")
+depthC <- aggregate(soilT$clay.,by=list(soilT$depthI),FUN="mean")
+colnames(depthC) <- c("depthI","clay")			
+
+depthK <- aggregate(soilT$Ks.cm.day,by=list(soilT$depthI),FUN="mean")
+colnames(depthK) <- c("depthI","KS")	
 
 theta <- function(psi.r,psi.s,alpha.mpa,h.mpa,n){
 
@@ -87,7 +95,7 @@ psi.r + ((psi.s-psi.r)/((1+((alpha.mpa*h.mpa)^n))^(1-(1/n))))
 #convert MPa to cm of water
 
 plot(soilAllx$vwc[soilAllx$depthI==1],abs(soilAllx$wp[soilAllx$depthI==1])*1019.7, pch=19,
-		col="cornflowerblue")
+		col="cornflowerblue", xlab="volumetric soil moisture", ylab ="water potential (- cm)")
 points(soilAllx$vwc[soilAllx$depthI==2],abs(soilAllx$wp[soilAllx$depthI==2])*1019.7, pch=19,
 		col="darkgreen")		
 points(soilAllx$vwc[soilAllx$depthI==3],abs(soilAllx$wp[soilAllx$depthI==3])*1019.7, pch=19,
@@ -96,21 +104,21 @@ points(soilAllx$vwc[soilAllx$depthI==4],abs(soilAllx$wp[soilAllx$depthI==4])*101
 		col="darkorchid3")
 
 points(theta(0.01,mean(soilT$qs),
-		50,seq(0,150000),1.3),	seq(0,150000),type="l")
+		.2,seq(0,150000),1.35),	seq(0,150000),type="l")
 #start by reading in psi as data based on texture and see how model runs
 datalist <- list(Nobs=dim(soilAllx)[1],
 				psi=soilAllx$vwc,
-				psi.r=0.01,
-				psi.s=mean(soilTx$qs),
+				psi.r=rep(0.01,4),
+				psi.s=depthS$qs,
 				h.cm=abs(soilAllx$wp)*1019.7,
-				shrubD=soilAllx$shrubD,
-				NshrubD=dim(ids)[1])
+				depth=soilAllx$depthI,
+				Ndepth=4)
 				
 				
 #starting values
-startV <- list(list(n=rnorm(1,1.8,.1),alpha.cm=runif(1,.15,.20)),
-				list(n=rnorm(1,2.2,.1),alpha.cm=runif(1,.10,.15)),
-				list(n=rnorm(1,2.6,.1),alpha.cm=runif(1,.20,.25)))
+startV <- list(list(n=rnorm(4,1.8,.1),alpha.cm=runif(4,.15,.20)),
+				list(n=rnorm(4,2.2,.1),alpha.cm=runif(4,.10,.15)),
+				list(n=rnorm(4,2.6,.1),alpha.cm=runif(4,.20,.25)))
 
 params <- c("alpha.cm","n","sig.psi","rep.psi")				
 				

@@ -1,13 +1,13 @@
 model{
 	for(i in 1:Nobs){
 		psi[i] ~ dnorm(mu.psi[i],tau.psi)
-		mu.psi[i] <- psi.r + ((psi.s-psi.r)/pow(1+(pow(alpha.cm*h.cm[i],n)),(1-(1/n))))
+		mu.psi[i] <- psi.r[depth[i]] + ((psi.s[depth[i]]-psi.r[depth[i]])/pow(1+(pow(alpha.cm[depth[i]]*h.cm[i],n[depth[i]])),(1-(1/n[depth[i]]))))
 	rep.psi[i]~ dnorm(mu.psi[i],tau.psi)
 	}
-
-		alpha.cm ~dunif(0,50)
-		n~dunif(0.5,3)
-
+	for(i in 1:Ndepth){
+		alpha.cm[i] ~dunif(0,50)
+		n[i]~dunif(0.5,3)
+	}
 	tau.psi <- pow(sig.psi,-2)
 	sig.psi ~ dunif(0,10)
 }
