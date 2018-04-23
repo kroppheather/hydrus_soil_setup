@@ -3,7 +3,7 @@ library(R2OpenBUGS)
 library(coda)
 
 #set model directory
-modD <- "c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run6"
+modD <- "c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run7"
 
 #read in soil texture data
 datT <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\texture.csv")
@@ -82,6 +82,8 @@ psi.r + ((psi.s-psi.r)/((1+((alpha.mpa*h.mpa)^n))^(1-(1/n))))
 # 1MPa =1019.7 cm of water
 
 
+
+
 #convert MPa to cm of water
 
 plot(soilAllx$vwc[soilAllx$depthI==1],abs(soilAllx$wp[soilAllx$depthI==1])*1019.7, pch=19,
@@ -98,17 +100,17 @@ points(theta(0.01,mean(soilT$qs),
 #start by reading in psi as data based on texture and see how model runs
 datalist <- list(Nobs=dim(soilAllx)[1],
 				psi=soilAllx$vwc,
-				psi.r=rep(0.01,dim(soilTx)[1]),
-				psi.s=soilTx$qs,
+				psi.r=0.01,
+				psi.s=mean(soilTx$qs),
 				h.cm=abs(soilAllx$wp)*1019.7,
 				shrubD=soilAllx$shrubD,
 				NshrubD=dim(ids)[1])
 				
 				
 #starting values
-startV <- list(list(n=rnorm(dim(ids)[1],1.8,.1),alpha.cm=runif(dim(ids)[1],.15,.20)),
-				list(n=rnorm(dim(ids)[1],2.2,.1),alpha.cm=runif(dim(ids)[1],.10,.15)),
-				list(n=rnorm(dim(ids)[1],2.6,.1),alpha.cm=runif(dim(ids)[1],.20,.25)))
+startV <- list(list(n=rnorm(1,1.8,.1),alpha.cm=runif(1,.15,.20)),
+				list(n=rnorm(1,2.2,.1),alpha.cm=runif(1,.10,.15)),
+				list(n=rnorm(1,2.6,.1),alpha.cm=runif(1,.20,.25)))
 
 params <- c("alpha.cm","n","sig.psi","rep.psi")				
 				

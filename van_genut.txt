@@ -1,13 +1,13 @@
 model{
 	for(i in 1:Nobs){
 		psi[i] ~ dnorm(mu.psi[i],tau.psi)
-		mu.psi[i] <- psi.r[shrubD[i]] + ((psi.s[shrubD[i]]-psi.r[shrubD[i]])/pow(1+(pow(alpha.cm[shrubD[i]]*h.cm[i],n[shrubD[i]])),(1-(1/n[shrubD[i]]))))
+		mu.psi[i] <- psi.r + ((psi.s-psi.r)/pow(1+(pow(alpha.cm*h.cm[i],n)),(1-(1/n))))
 	rep.psi[i]~ dnorm(mu.psi[i],tau.psi)
 	}
-	for(j in 1:NshrubD){
-		alpha.cm[j] ~dunif(0,50)
-		n[j]~dunif(0.5,3)
-	}
+
+		alpha.cm ~dunif(0,50)
+		n~dunif(0.5,3)
+
 	tau.psi <- pow(sig.psi,-2)
 	sig.psi ~ dunif(0,10)
 }
