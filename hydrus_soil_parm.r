@@ -3,7 +3,7 @@ library(R2OpenBUGS)
 library(coda)
 
 #set model directory
-modD <- "c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run8"
+modD <- "c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run7"
 
 #read in soil texture data
 datT <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\texture.csv")
@@ -133,9 +133,9 @@ bugs(data=datalist, inits=startV,parameters.to.save=params,
 			 
 #start plot that reads in all parameters
 #read in coda
-chain1 <- read.bugs("c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run3\\CODAchain1.txt")
-chain2 <- read.bugs("c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run3\\CODAchain2.txt")
-chain3 <- read.bugs("c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run3\\CODAchain3.txt")
+chain1 <- read.bugs("c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run7\\CODAchain1.txt")
+chain2 <- read.bugs("c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run7\\CODAchain2.txt")
+chain3 <- read.bugs("c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run7\\CODAchain3.txt")
 
 
 chains <- rbind(chain1[[1]],chain2[[1]],chain3[[1]])	
@@ -159,4 +159,27 @@ for(i in 1:dim(ids)[1]){
 		
 	dev.off()		
 }
-		
+	
+fit <- lm(OUT$Mean[4:409]~soilAllx$vwc)
+jpeg(paste0(modD,"\\plots\\fit\\fit.jpg"),
+			quality=100,width=1000,height=1000)
+	par(mfrow=c(2,1))		
+	plot(soilAllx$vwc, OUT$Mean[4:409], pch=19, col="cornflowerblue",
+	xlab="observed vwc", ylab="predicted vwc",ylim=c(0,.4),
+	xlim=c(0,.4))
+	text(.15,.35,paste("pred =",
+				round(summary(fit)$coefficients[1,1],2),
+				" +", round(summary(fit)$coefficients[2,1],2),
+				"*obs"))
+				
+	text(.15,.25,paste("R2=",round(summary(fit)$r.squared,2)))			
+	abline(fit, lwd=2, lty=2)
+	abline(0,1,lwd=2, col="red")
+	plot(abs(soilAllx$wp)*1019.7,soilAllx$vwc,
+				 pch=19,
+				col="cornflowerblue",cex=2,ylab="vwc",
+				xlab="water potential (-cm)")
+		points(seq(0,150000),theta(0.01,mean(soilT$qs),
+		.21,seq(0,150000),1.32),
+		type="l", lwd=3, col="tomato3")
+dev.off()		
