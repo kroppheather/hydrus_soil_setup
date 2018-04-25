@@ -26,10 +26,11 @@ parmG <- parmS[rownames(parmS)=="alpha.cm"|rownames(parmS)=="n",]
 
 #read in soil texture data
 datT <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\texture.csv")
-
-#read in soil moisture curves
-datM <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\soil_mrc.csv")
-colnames(datM)[2] <- "Depth"
+datT$depthI <- ifelse(datT$Depth=="0-10",1,
+				ifelse(datT$Depth=="10-20",2,
+				ifelse(datT$Depth=="20-30",3,4)))
+				
+				
 #read in hydrus soil catalog
 #contains parameters from
 #Carsel and Parrish [1988] for each soil texture classification
@@ -39,8 +40,19 @@ datH <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\hydrus_soil_cat.csv")
 colnames(datH)[1] <- "texture"
 
 #aggregate by soil layer then join to hydrus layer
+sandL <- aggregate(datT$sand.,by=list(datT$depthI),FUN="mean")
+clayL <- aggregate(datT$clay.,by=list(datT$depthI),FUN="mean")
+colnames(sandL) <- c("depthI","sand")
+colnames(clayL) <- c("depthI","clay")
 
-
+textI <- data.frame(depthI=seq(1,4),
+			texture=c("loamy sand","loamy sand","sandy loam","sandy loam"))
 
 #join texture to characteristics for each shrub
-#soilT <- join(datT,datH, by="texture", type="left")
+textI <- join(textI,datH, by="texture", type="left")
+
+textI$Ks.cm.min <- (textI$Ks.cm.day/24)/60
+
+####met data for ET ####
+datMET <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\MCFD_met.csv")
+
