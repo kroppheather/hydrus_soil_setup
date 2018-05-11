@@ -3,6 +3,7 @@
 ######################################
 library(R2OpenBUGS)
 library(plyr)
+library(lubridate)
 ####van genutchen data####
 #model directory
 modDI <- c("c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run7")
@@ -54,5 +55,73 @@ textI <- join(textI,datH, by="texture", type="left")
 textI$Ks.cm.min <- (textI$Ks.cm.day/24)/60
 
 ####met data for ET ####
-datMET <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\MCFD_met.csv")
+datMET <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\MCFD_cleaned_all.csv")
 
+#extract date information
+dateMET <- as.Date(datMET$Date, "%m/%d/%Y")
+datMET$doy <- yday(dateMET)
+datMET$year <- year(dateMET)
+
+#convert time to hour
+datMET$hour <- round_any(datMET$Time/100,.5)
+
+#gap fill missing data
+tempR <- lm(datMET$temp_4507_C~datMET$temp_4617_C)
+
+datMET$temp4507_gap <- ifelse(is.na(datMET$temp_4507_C),
+						tempR$coefficients[1]+(tempR$coefficients[2]*datMET$temp_4617_C),
+						datMET$temp_4507_C)
+
+
+
+#calculate priestly taylor
+#esat
+#ta degrees C
+e.sat <- function(Ta){
+	0.61121*exp((17.502*Ta)/(Ta+240.97))
+
+}
+
+
+#Ta degrees C and e.sat kpa
+DELTA <- function(Ta,e.sat){
+	(17.502*240.97*e.sat)/((Ta+240.97)^2)
+
+}
+
+#PET calc
+#Rn W/m2
+
+PET.WM <- function(Rn,DELTA){
+	1.26*(DELTA/(DELTA+0.066))*Rn
+
+}
+
+#latent heat of vaporization
+lambda <- function(Ta){
+	2495000-((0.00236*Ta)*1000000)
+
+}
+
+
+#convert PET from W/m2 to M/s
+#by dividing by the density of water and the latent heat of vaporization
+PET.MS <- function(PET.WM, lambda){
+	PET.WM/(1000*lambda)
+
+}
+
+
+#temp_4507_C
+#SR_4703_wsqm
+
+#calculations
+datMET$e.sat <- e.sat(datMET$temp4507_gap)
+datMET$DELTA <- DELTA(datMET$temp4507_gap,datMET$e.sat)
+datMET$PER.WM <- PET.WM(datMET$SR_4703_wsqm,datMET$DELTA)
+datMET$lambda <- lambda(datMET$temp4507_gap)
+datMET$PET.MS <- PET.MS(datMET$PER.WM,datMET$lambda)
+#mm/hr
+plot(datMET$year+(datMET$doy/366)+(datMET$hour/24),datMET$PET.MS*100*60)
+
+plot(datMET$year+(datMET$doy/366)+(datMET$hour/24),datMET$PER.WM)
