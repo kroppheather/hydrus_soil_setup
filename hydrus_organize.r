@@ -56,7 +56,7 @@ textI <- join(textI,datH, by="texture", type="left")
 textI$Ks.cm.min <- (textI$Ks.cm.day/24)/60
 
 ####met data for ET ####
-datMET <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\MCFD_cleaned_all.csv")
+datMET <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\MCFD_All_rad.csv")
 
 #extract date information
 dateMET <- as.Date(datMET$Date, "%m/%d/%Y")
@@ -73,42 +73,13 @@ datMET$temp4507_gap <- ifelse(is.na(datMET$temp_4507_C),
 						tempR$coefficients[1]+(tempR$coefficients[2]*datMET$temp_4617_C),
 						datMET$temp_4507_C)
 
-#read in Pima station radiation for gap fill
-datFeb15 <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\Feb 2015.csv")						
-datFeb15$doy <-	rep(seq(69,54, by=-1),each=49)					
-datFeb15$year <- rep(2015, dim(datFeb15)[1])
-datFeb15$hour <- rep(c(NA, seq(24,.5,by=-.5)),times=16)						
-#read in Pima station april						
-datApril16 <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\April 2016.csv")
-datApril16$doy <-	rep(seq(214,102, by=-1),each=49)					
-datApril16$year <- rep(2016, dim(datApril16)[1])
-datApril16$hour <- rep(c(NA, seq(24,.5,by=-.5)),times=113)		
-#read in Pima station august					
-datAug16 <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\August 2016.csv")
-datAug16$doy <-	rep(seq(254,239, by=-1),each=49)					
-datAug16$year <- rep(2016, dim(datAug16)[1])
-datAug16$hour <- rep(c(NA, seq(24,.5,by=-.5)),times=16)	
-#read in south mountain station
-datSept16 <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\sept 2016 south mountain.csv")
-datSept16 $doy <-	rep(seq(251,250, by=-1),each=49)					
-datSept16 $year <- rep(2016, dim(datSept16)[1])
-datSept16 $hour <- rep(c(NA, seq(24,.5,by=-.5)),times=2)	
-	
+plot(datMET$SR_68511_wsqm,datMET$SR_4703_wsqm)
+solR <- lm(datMET$SR_68511_wsqm~datMET$SR_4703_wsqm)
 
-PimaAll <- rbind(datFeb15,datApril16,datAug16)
-PimaAll <- PimaAll[,-1]
-#now join
-datMET<- join(datMET,PimaAll,by=c("doy","year","hour"),type="left")
-#gapfill datMET
-
-datMET$SR_gap <- ifelse(is.na(datMET$SR_4703_wsqm),
-					datMET$pima_wmsq,datMET$SR_4703_wsqm)
+datMET$SR_gap2 <- ifelse(is.na(datMET$SR_4703_wsqm),
+						0+(solR$coefficients[2]*datMET$SR_68511_wsqm),
+						datMET$SR_4703_wsqm)
 					
-#now join South mountain park
-datMET<- join(datMET,datSept16,by=c("doy","year","hour"),type="left")					
-
-datMET$SR_gap2 <- ifelse(is.na(datMET$SR_gap),
-					datMET$south_mountain_wsqm,datMET$SR_gap)					
 
 datMET[is.na(datMET$SR_gap2),]						
 #convert precip to cm
@@ -179,7 +150,7 @@ plot(datMET$year+(datMET$doy/366)+(datMET$hour/24),datMET$PER.WM)
 #covert precip back to cm
 #aggregate to hourly
 hhR <- which(datMET$hour-floor(datMET$hour)==0)
-precipHH <- datMET$ppt_4500_gap_mm[hhR]+datMET$ppt_4500_gap_mm[hhR-1]
+precipHH <- (datMET$ppt_4500_gap_mm[hhR]+datMET$ppt_4500_gap_mm[hhR-1])/10
 
 
 datMET$PET.cmhr <- datMET$PET.MS*100*60*60
