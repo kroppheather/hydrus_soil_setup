@@ -103,6 +103,9 @@ points(soilAllx$vwc[soilAllx$depthI==3],abs(soilAllx$wp[soilAllx$depthI==3])*101
 points(soilAllx$vwc[soilAllx$depthI==4],abs(soilAllx$wp[soilAllx$depthI==4])*1019.7, pch=19,
 		col="darkorchid3")
 
+#calculate an average value for Hcrit
+mean(soilAllx$wp[soilAllx$vwc>=0.015&soilAllx$vwc<=0.025]*1019.7)		
+#-98848.09		
 points(theta(0.01,mean(soilT$qs),
 		.2,seq(0,150000),1.35),	seq(0,150000),type="l")
 #start by reading in psi as data based on texture and see how model runs
