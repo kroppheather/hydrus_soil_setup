@@ -178,7 +178,7 @@ datMET$PET.cmhr <- datMET$PET.MS*100*60*60
 metOut <- data.frame(Time=seq(1,length(precipHH)),
 			Precip=precipHH,	
 			rsoil = round(datMET$PET.cmhr[hhR]*exp(-0.39*0.64),6),
-			hCritA = rep(2000,length(precipHH)),
+			hCritA = rep(100000,length(precipHH)),
 			rroot = round(datMET$PET.cmhr[hhR]*(1-exp(-0.39*0.64)),6))
 			
 metOut[is.na(metOut),]			
