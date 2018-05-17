@@ -4,6 +4,7 @@
 library(R2OpenBUGS)
 library(plyr)
 library(lubridate)
+library(zoo)
 ####van genutchen data####
 #model directory
 modDI <- c("c:\\Users\\hkropp\\Google Drive\\hydrus\\van_genut\\run7")
@@ -56,7 +57,7 @@ textI <- join(textI,datH, by="texture", type="left")
 textI$Ks.cm.min <- (textI$Ks.cm.day/24)/60
 
 ####met data for ET ####
-datMET <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\MCFD_All_rad.csv")
+datMET <- read.csv("c:\\Users\\hkropp\\Google Drive\\hydrus\\MCFD_extended.csv")
 
 #extract date information
 dateMET <- as.Date(datMET$Date, "%m/%d/%Y")
@@ -72,7 +73,9 @@ tempR <- lm(datMET$temp_4507_C~datMET$temp_4617_C)
 datMET$temp4507_gap <- ifelse(is.na(datMET$temp_4507_C),
 						tempR$coefficients[1]+(tempR$coefficients[2]*datMET$temp_4617_C),
 						datMET$temp_4507_C)
-
+#replace one bad measurement in data that is -17
+datMET$temp4507_gap <- ifelse(datMET$temp4507_gap<=-10,datMET$temp_4617_C,
+					datMET$temp4507_gap)						
 plot(datMET$SR_68511_wsqm,datMET$SR_4703_wsqm)
 solR <- lm(datMET$SR_68511_wsqm~datMET$SR_4703_wsqm)
 
@@ -81,7 +84,15 @@ datMET$SR_gap2 <- ifelse(is.na(datMET$SR_4703_wsqm),
 						datMET$SR_4703_wsqm)
 					
 
-datMET[is.na(datMET$SR_gap2),]						
+datMET[is.na(datMET$SR_gap2),]
+#all temps have a gap for 3 hours in 2015 spin up period. Fill in with na.approx
+datMET[is.na(datMET$temp4507_gap),]		
+
+datMET$temp4507_gap2 <- na.approx(datMET$temp4507_gap)	
+datMET[is.na(datMET$temp4507_gap),]	
+plot(datMET$temp4507_gap)
+plot(datMET$temp4507_gap2)
+datMET[is.na(datMET$temp4507_gap2),]		
 #convert precip to cm
 datMET$ppt_4500_cm <-datMET$ppt_4500_in*2.54
 #convert precip to mm
@@ -136,13 +147,13 @@ PET.MS <- function(PET.WM, lambda){
 #SR_4703_wsqm
 
 #calculations
-datMET$e.sat <- e.sat(datMET$temp4507_gap)
-datMET$DELTA <- DELTA(datMET$temp4507_gap,datMET$e.sat)
+datMET$e.sat <- e.sat(datMET$temp4507_gap2)
+datMET$DELTA <- DELTA(datMET$temp4507_gap2,datMET$e.sat)
 datMET$PER.WM <- PET.WM(datMET$SR_4703_wsqm,datMET$DELTA)
-datMET$lambda <- lambda(datMET$temp4507_gap)
+datMET$lambda <- lambda(datMET$temp4507_gap2)
 datMET$PET.MS <- PET.MS(datMET$SR_gap2,datMET$lambda)
 #cm/hr
-plot(datMET$year+(datMET$doy/366)+(datMET$hour/24),datMET$PET.MS*100*60)
+plot(datMET$year+(datMET$doy/366)+(datMET$hour/24),datMET$PET.MS*100*60*60)
 
 plot(datMET$year+(datMET$doy/366)+(datMET$hour/24),datMET$PER.WM)
 
@@ -167,10 +178,10 @@ datMET$PET.cmhr <- datMET$PET.MS*100*60*60
 metOut <- data.frame(Time=seq(1,length(precipHH)),
 			Precip=precipHH,	
 			rsoil = round(datMET$PET.cmhr[hhR]*exp(-0.39*0.64),6),
-			hCritA = rep(99000,length(precipHH)),
+			hCritA = rep(2000,length(precipHH)),
 			rroot = round(datMET$PET.cmhr[hhR]*(1-exp(-0.39*0.64)),6))
 			
-			
+metOut[is.na(metOut),]			
 			
 write.table(metOut, "c:\\Users\\hkropp\\Google Drive\\hydrus\\met_output.csv",
 			sep=",",row.names=FALSE)	
